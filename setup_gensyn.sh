@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 # Colors
 GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
 # BANNER
@@ -48,8 +52,11 @@ echo -e "${GREEN}[2/10] Installing dependencies silently...${NC}"
 sudo apt install -y -qq sudo nano curl python3 python3-pip python3-venv git screen > /dev/null
 
 echo -e "${GREEN}[3/10] Installing NVM and latest Node.js...${NC}"
-curl -s -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+if [ ! -d "$HOME/.nvm" ]; then
+  curl -s -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+fi
 export NVM_DIR="$HOME/.nvm"
+# shellcheck source=/dev/null
 source "$NVM_DIR/nvm.sh"
 nvm install node > /dev/null
 nvm use node > /dev/null
@@ -74,6 +81,7 @@ cd "$RL_SWARM_DIR"
 echo -e "${GREEN}[6/10] Setting up Python virtual environment...${NC}"
 python3 -m venv .venv
 source .venv/bin/activate
+
 # Try to locate the config YAML
 echo -e "${GREEN}🔍 Searching for YAML config file...${NC}"
 
@@ -108,13 +116,15 @@ sed -i 's/gradient_checkpointing:.*/gradient_checkpointing: false/' "$CONFIG_FIL
 sed -i 's/per_device_train_batch_size:.*/per_device_train_batch_size: 1/' "$CONFIG_FILE"
 
 echo -e "${GREEN}✅ Config updated and backup saved as $CONFIG_FILE.bak${NC}"
-echo -e "${GREEN} Updating grpo_runner.py to change DHT start and timeout...${NC}"
+
+echo -e "${GREEN}Updating grpo_runner.py to change DHT start and timeout...${NC}"
 sed -i.bak 's/startup_timeout=30/startup_timeout=120/' "$HOME/rl-swarm/hivemind_exp/runner/grpo_runner.py"
-echo -e "${GREEN} Activating virtual environment...${NC}"
+
+echo -e "${GREEN}Activating virtual environment...${NC}"
 cd "$HOME/rl-swarm"
 source .venv/bin/activate
 
-# Now we can safely get the Python version from the venv
+# Get Python version for path
 PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 P2P_DAEMON_FILE="$HOME/rl-swarm/.venv/lib/python$PYTHON_VERSION/site-packages/hivemind/p2p/p2p_daemon.py"
 
@@ -124,21 +134,21 @@ if [ -f "$P2P_DAEMON_FILE" ]; then
   sed -i 's/startup_timeout: float = 15/startup_timeout: float = 120/' "$P2P_DAEMON_FILE"
   echo -e "${GREEN}✅ Updated startup_timeout to 120 in: $P2P_DAEMON_FILE${NC}"
 else
-  echo -e "${RED⚠️ File not found: $P2P_DAEMON_FILE. Skipping this step.${NC}"
+  echo -e "${RED}⚠️ File not found: $P2P_DAEMON_FILE. Skipping this step.${NC}"
 fi
-
 
 echo -e "${GREEN}🧹 Closing any existing 'gensyn' screen sessions...${NC}"
 screen -ls | grep -o '[0-9]*\.gensyn' | while read -r session; do
   screen -S "${session%%.*}" -X quit
 done
+
 # Free port 3000 if already in use
 echo -e "${GREEN}🔍 Checking if port 3000 is in use (via netstat)...${NC}"
 PORT_3000_PID=$(sudo netstat -tunlp 2>/dev/null | grep ':3000' | awk '{print $7}' | cut -d'/' -f1 | head -n1)
 
 if [ -n "$PORT_3000_PID" ]; then
   echo -e "${RED}⚠️  Port 3000 is in use by PID $PORT_3000_PID. Terminating...${NC}"
-  sudo kill -9 "$PORT_3000_PID" || true
+  sudo kill -15 "$PORT_3000_PID" || sudo kill -9 "$PORT_3000_PID" || true
   echo -e "${GREEN}✅ Port 3000 has been freed.${NC}"
 else
   echo -e "${GREEN}✅ Port 3000 is already free.${NC}"
@@ -162,8 +172,6 @@ echo -e "2) Cloudflared"
 echo -e "3) Ngrok"
 echo -e "4) Auto fallback (try all methods)"
 read -rp "Enter your choice [1-4]: " TUNNEL_CHOICE
-
-TUNNEL_URL=""
 
 start_localtunnel() {
   echo -e "${GREEN}🔌 Starting LocalTunnel...${NC}"
@@ -193,14 +201,13 @@ start_ngrok() {
     npm install -g ngrok > /dev/null
   fi
   read -rp "🔑 Enter your Ngrok auth token from https://dashboard.ngrok.com/get-started/your-authtoken: " NGROK_TOKEN
-ngrok config add-authtoken "$NGROK_TOKEN" > /dev/null 2>&1
+  ngrok authtoken "$NGROK_TOKEN" > /dev/null 2>&1
   screen -S ngrok_tunnel -X quit 2>/dev/null
   screen -dmS ngrok_tunnel bash -c "ngrok http 3000 > /dev/null 2>&1"
   sleep 5
   curl -s http://localhost:4040/api/tunnels | grep -o "https://[^\"']*" | head -n 1
 }
 
-# Manual selection or fallback logic
 case "$TUNNEL_CHOICE" in
   1)
     TUNNEL_URL=$(start_localtunnel)
@@ -212,21 +219,16 @@ case "$TUNNEL_CHOICE" in
     TUNNEL_URL=$(start_ngrok)
     ;;
   4|*)
+    # Try all methods in order until one works
     TUNNEL_URL=$(start_localtunnel)
-    ;;
-esac
-
-# Fallback logic outside the case block
-if [ -z "$TUNNEL_URL" ]; then
-  echo -e "${YELLOW}⚠️ LocalTunnel failed, trying Cloudflared...${NC}"
-  TUNNEL_URL=$(start_cloudflared)
-fi
-
-if [ -z "$TUNNEL_URL" ]; then
-  echo -e "${YELLOW}⚠️ Cloudflared failed, trying Ngrok...${NC}"
-  TUNNEL_URL=$(start_ngrok)
-fi
-
+    if [ -z "$TUNNEL_URL" ]; then
+      echo -e "${YELLOW}⚠️ LocalTunnel failed, trying Cloudflared...${NC}"
+      TUNNEL_URL=$(start_cloudflared)
+    fi
+    if [ -z "$TUNNEL_URL" ]; then
+      echo -e "${YELLOW}⚠️ Cloudflared failed, trying Ngrok...${NC}"
+      TUNNEL_URL=$(start_ngrok)
+    fi
     ;;
 esac
 
