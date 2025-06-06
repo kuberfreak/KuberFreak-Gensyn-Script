@@ -18,7 +18,7 @@ sudo apt install unzip
 ```
 ---
 
-If sudo: command not found:
+If sudo: command not found:  ❌❌❌
 ```bash
 apt install sudo
 ```
@@ -67,6 +67,11 @@ sudo ufw enable
 
 ```bash
 ./setup_gensyn.sh
+```
+
+```bash
+cd
+screen -r gensyn
 ```
 ---
 
