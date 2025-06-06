@@ -27,14 +27,16 @@ apt install sudo
 
 ```bash
 git clone https://github.com/kuberfreak/KuberFreak-Gensyn-Script.git
-cd gensyn-script
+cd KuberFreak-Gensyn-Script
 ```
 
-## If above command giving you error file already exits then run below command first then run the Step 2 else don't run below command (ONLY IF YOU GET ERROR)
+## If above command giving you error file already exits then run below command first then run the Step 2 else don't run below command (ONLY IF YOU GET ERROR) 
 
+❌❌❌
 ```bash
-rm -rf gensyn-script
+rm -rf KuberFreak-Gensyn-Script
 ```
+❌❌❌
 
 ---
 
