@@ -193,7 +193,7 @@ start_ngrok() {
     npm install -g ngrok > /dev/null
   fi
   read -rp "🔑 Enter your Ngrok auth token from https://dashboard.ngrok.com/get-started/your-authtoken: " NGROK_TOKEN
-  ngrok config add-authtoken "$NGROK_TOKEN" > /dev/null 2>&1
+ngrok config add-authtoken "$NGROK_TOKEN" > /dev/null 2>&1
   screen -S ngrok_tunnel -X quit 2>/dev/null
   screen -dmS ngrok_tunnel bash -c "ngrok http 3000 > /dev/null 2>&1"
   sleep 5
