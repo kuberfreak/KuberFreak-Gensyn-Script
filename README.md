@@ -14,6 +14,7 @@ Update and upgrade your system, then install required packages:
 ```bash
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt install nano curl screen git ufw -y
+sudo apt install unzip
 ```
 ---
 
