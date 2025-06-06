@@ -197,7 +197,7 @@ ngrok config add-authtoken "$NGROK_TOKEN" > /dev/null 2>&1
   screen -S ngrok_tunnel -X quit 2>/dev/null
   screen -dmS ngrok_tunnel bash -c "ngrok http 3000 > /dev/null 2>&1"
   sleep 5
-  curl -s http://localhost:4040/api/tunnels | grep -o 'https://[^"]*' | head -n 1
+  curl -s http://localhost:4040/api/tunnels | grep -o "https://[^\"']*" | head -n 1
 }
 
 # Manual selection or fallback logic
