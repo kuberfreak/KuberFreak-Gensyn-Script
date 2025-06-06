@@ -66,7 +66,7 @@ sudo ufw enable
 ## Step 5: Run the GENSYN
 
 ```bash
-sudo ./setup_gensyn.sh
+./setup_gensyn.sh
 ```
 
 ```bash
