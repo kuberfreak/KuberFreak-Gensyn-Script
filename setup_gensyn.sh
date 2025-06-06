@@ -82,6 +82,10 @@ echo -e "${GREEN}[6/10] Setting up Python virtual environment...${NC}"
 python3 -m venv .venv
 source .venv/bin/activate
 
+echo -e "${GREEN}[6.1/10] Installing hivemind package...${NC}"
+pip install --upgrade pip > /dev/null
+pip install hivemind > /dev/null
+
 # Try to locate the config YAML
 echo -e "${GREEN}🔍 Searching for YAML config file...${NC}"
 
