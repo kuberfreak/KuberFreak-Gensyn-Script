@@ -26,7 +26,7 @@ apt install sudo
 ## Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/CodeDialect/gensyn-script.git
+git clone https://github.com/kuberfreak/KuberFreak-Gensyn-Script.git
 cd gensyn-script
 ```
 
