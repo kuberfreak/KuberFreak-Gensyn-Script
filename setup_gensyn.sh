@@ -213,15 +213,20 @@ case "$TUNNEL_CHOICE" in
     ;;
   4|*)
     TUNNEL_URL=$(start_localtunnel)
+    ;;
 esac
-    if [ -z "$TUNNEL_URL" ]; then
-      echo -e "${YELLOW}⚠️ LocalTunnel failed, trying Cloudflared...${NC}"
-      TUNNEL_URL=$(start_cloudflared)
-    fi
-    if [ -z "$TUNNEL_URL" ]; then
-      echo -e "${YELLOW}⚠️ Cloudflared failed, trying Ngrok...${NC}"
-      TUNNEL_URL=$(start_ngrok)
-    fi
+
+# Fallback logic outside the case block
+if [ -z "$TUNNEL_URL" ]; then
+  echo -e "${YELLOW}⚠️ LocalTunnel failed, trying Cloudflared...${NC}"
+  TUNNEL_URL=$(start_cloudflared)
+fi
+
+if [ -z "$TUNNEL_URL" ]; then
+  echo -e "${YELLOW}⚠️ Cloudflared failed, trying Ngrok...${NC}"
+  TUNNEL_URL=$(start_ngrok)
+fi
+
     ;;
 esac
 
