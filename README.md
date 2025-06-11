@@ -71,7 +71,7 @@ sudo ufw enable
 
 ```bash
 cd
-screen -r gensyn
+screen -r max
 ```
 ---
 
