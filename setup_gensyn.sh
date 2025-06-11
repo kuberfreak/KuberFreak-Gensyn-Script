@@ -146,7 +146,7 @@ else
 fi
 
 echo -e "${GREEN}[8/10] Running rl-swarm in screen session...${NC}"
-screen -dmS gensyn bash -c "
+screen -dmS max bash -c "
 cd ~/rl-swarm
 source \"$HOME/rl-swarm/.venv/bin/activate\"
 ./run_rl_swarm.sh || echo '⚠️ run_rl_swarm.sh exited with error code \$?'
