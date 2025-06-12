@@ -68,6 +68,7 @@ sudo ufw enable
 ```bash
 ./setup_gensyn.sh
 ```
+copy the login url of ngrok before going to further step.
 
 ## Step 6: Open Screen
 
