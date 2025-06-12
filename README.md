@@ -69,11 +69,27 @@ sudo ufw enable
 ./setup_gensyn.sh
 ```
 
+## Step 6: Open Screen
+
 ```bash
 cd
 screen -r max
 ```
----
+----
+
+## GETTING ERROR LIKE NO SCREEN SESSION FOUND 
+# Run
+
+```bash
+screen -S max
+```
+```bash
+cd $HOME/rl-swarm/
+```
+```bash
+python3 -m venv .venv && . .venv/bin/activate && ./run_rl_swarm.sh
+```
+
 
 ## Fix RuntimeError: DHTNode bootstrap failed
 
